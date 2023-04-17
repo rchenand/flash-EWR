@@ -1,43 +1,51 @@
+/*
+ * Erase Write Read (EWR) cycle for MT25 Micron family of NOR Flash.
+ * 
+ * error: RUID not correct, how do we read that?
+ */
+
 #include <SPI.h>
 #include <bitset>
 
 // Read Device ID
 #define RDID 0x9F // Read ID
-#define RSFDP 0x5A // Read JEDEC Serial1 Flash Parameters 
-#define RDQID 0xAF // Read Quad ID
-#define RUID 0x4B // Read Unique ID
+#define RSFDP 0x5A // Read Serial Flash Discovery Parameter 
+#define RDMIO 0xAF // Multiple I/O Read ID
+#define RUID 0x4B // Read Unique ID ?
 
 // Register Access
-#define RDSR1 0x05 // Read Status Register 1
+#define RDSR1 0x05 // Read Status Register 
 // RDSR1 Bits
 #define WIP 0 //Write in Progress
 #define WEL 1 //Write Enable Latch
 //End RDSR1 Bits
-#define RDSR2 0x07 // Read Status Register 2
+#define RDSR2 0x70 // Read Status Register 2
 // RDSR2 Bits
 #define E_ERR 6 //Erase Error Occurred (1 == Error)
 #define P_ERR 5 //Programming Error Occurred (1 == Error)
-#define ES 1 //Erase Suspend
-#define PS 0 //Program Suspend
+#define ES 7 //Erase Suspend
+#define PS 3 //Program Suspend
 //End RDSR2 Bits
-#define RDCR1 0x35 // Read Configuration Register 1
-#define RDCR2 0x15 // Read Configuration Register 2
-#define RDCR3 0x33 // Read Configuration Register 3
-#define RDAR 0x65 // Read Any Register
+
+
+//#define RDCR1 0x35 Read Configuration Register 1
+//#define RDCR2 0x15 Read Configuration Register 2
+//#define RDCR3 0x33 Read Configuration Register 3
+//#define RDAR 0x65 Read Any Register
 #define WRR 0x01 // Write Register, All Status and Configuration
 #define WRDI 0x04 // Write Disable
 #define WREN 0x06 // Write Enable for Non-volatile data change
-#define WRENV 0x50 // Write Enable for Volatile Status and Configuration Registers
-#define WRAR 0x71 // Write Any Register
-#define CLSR 0x30 // Clear Status Register
+//#define WRENV 0x50 Write Enable for Volatile Status and Configuration Registers
+//#define WRAR 0x71 Write Any Register
+//#define CLSR 0x30 Clear Status Register
 #define BEN4 0xB7 // Enter 4 Byte Address Mode
 #define BEX4 0xE9 // Exit 4 Byte Address Mode
-#define SBL 0x77 // Set Burst Length
+//#define SBL 0x77 Set Burst Length
 #define QPIEN 0x38 // Enter QPI
 #define QPIEX 0xF5 // Exit QPI
-#define DLPRD 0x41 // Data Learning Pattern Read
-#define PDLRNV 0x43 // Program NV Data Learning Register
-#define WDLRV 0x4A // Write Volatile Data Learning Register
+//#define DLPRD 0x41 Data Learning Pattern Read
+//#define PDLRNV 0x43 Program NV Data Learning Register
+//#define WDLRV 0x4A Write Volatile Data Learning Register
 
 // Read Flash Array
 #define READ 0x03 // Read
@@ -65,46 +73,46 @@
 #define SE 0x20 //Sector Erase
 #define SE4 0x21 //Sector Erase
 #define HBE 0x52 //Half Block Erase
-#define HBE4 0x53 //Half Block Erase
+#define HBE4 0x5C //Half Block Erase
 #define BE 0xD8 //Block Erase
 #define BE4 0xDC //Block Erase
-#define CE 0x60 //Chip Erase
-#define CE_ALT 0xC7 //Chip Erase (Alternate Instruction)
+#define CE 0xC4 //Chip Erase
+//#define CE_ALT 0xC7 //Chip Erase (Alternate Instruction)
 
 //Erase/Program Suspend/Resume
 #define EPS 0x75 //Erase/Program Suspend
 #define EPR 0x7A //Erase/Program Resume
 
 //Security Region Array
-#define SECRE 0x44 //Security Region Erase
-#define SECRP 0x42 //Security Region Program
-#define SECRR 0x48 //Security Region Read
+//#define SECRE 0x44 Security Region Erase
+//#define SECRP 0x42 Security Region Program
+//#define SECRR 0x48 Security Region Read
 
 //Array Protection
-#define IBLRD 0x3D //IBL Read
-#define IBLRD4 0xE0 //IBL Read
-#define IBL 0x36 //IBL Lock
-#define IBL4 0xE1 //IBL Lock
-#define IBUL 0x39 //IBL Unlock
-#define IBUL4 0xE2 //IBL Unlock
-#define GBL 0x7E //Global IBL Lock0
-#define GBUL 0x98 //Global IBL Unlock
-#define SPRP 0xFB //Set Pointer Region Protection
-#define SPRP4 0xE3 //Set Pointer Region Protection
+//#define IBLRD 0x3D IBL Read
+//#define IBLRD4 0xE0 IBL Read
+//#define IBL 0x36 IBL Lock
+//#define IBL4 0xE1 IBL Lock
+//#define IBUL 0x39 IBL Unlock
+//#define IBUL4 0xE2 IBL Unlock
+//#define GBL 0x7E Global IBL Lock0
+//#define GBUL 0x98 Global IBL Unlock
+//#define SPRP 0xFB Set Pointer Region Protection
+//#define SPRP4 0xE3 Set Pointer Region Protection
 
 //Individual and Region Protection
-#define IRPRD 0x2B //IRP Register Read
-#define IRPP 0x2F //IRP Register Program
-#define PRRD 0xA7 //Protection Register Read
-#define PRL 0xA6 //Protection Register Lock (NVLOCK Bit Write)
-#define PASSRD 0xE7 //Password Read
-#define PASSP 0xE8 //Password Program
-#define PASSU 0xEA //Password Unlock
+//#define IRPRD 0x2B IRP Register Read
+//#define IRPP 0x2F IRP Register Program
+//#define PRRD 0xA7 Protection Register Read
+//#define PRL 0xA6 Protection Register Lock (NVLOCK Bit Write)
+//#define PASSRD 0xE7 Password Read
+//#define PASSP 0xE8 Password Program
+//#define PASSU 0xEA Password Unlock
 
 //Reset
 #define RSTEN 0x66 //Software Reset Enable
-#define RST 0x99 //Software Reset
-#define MBR 0xFF //Mode Bit Reset
+#define RST 0x99 //Software Reset mEMORY
+//#define MBR 0xFF Mode Bit Reset
 
 //Deep Power Down
 #define DPD 0xB9 //Deep Power Down
@@ -113,11 +121,11 @@
 
 // Global pin names/variables
 static pin_size_t write_protect = 21;
-static pin_size_t reset = 22;
-static pin_size_t cs = 17;
 static pin_size_t sck = 18;
-static pin_size_t sdo = 19;
-static pin_size_t sdi = 16;
+static pin_size_t mosi = 19;
+static pin_size_t miso = 16;
+static pin_size_t cs = 17;
+static pin_size_t reset = 22;
 static int cycle_count = 0;
 static int xchange_error = 0;
 
@@ -149,6 +157,8 @@ void clear_screen(){
 //Read the status register to see executing commands, hold until commands have finished executing succesfully
 void read_status_until_done() {
   /*
+   * 
+   * 'Write in progress WIP bit indicates if one of the following command cycles is in progress: write status register, write nonvolatile configuration register, program, erase"
     Design for Reliability Note:
       From page 73 of the datasheet:
         'The host system can determine when a write, program, erase, suspend or other embedded operation is complete
@@ -206,8 +216,8 @@ void setup() {
   SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
   SPI.setCS(cs);  
   SPI.setSCK(sck);
-  SPI.setRX(sdi);
-  SPI.setTX(sdo);
+  SPI.setRX(miso);
+  SPI.setTX(mosi);
   pinMode(cs, OUTPUT);
   //Disable write protect
   pinMode(write_protect, OUTPUT);
