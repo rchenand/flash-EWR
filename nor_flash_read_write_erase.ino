@@ -113,7 +113,7 @@
 
 // Global pin names/variables
 static pin_size_t write_protect = 21;
-static pin_size_t reset = 20;
+static pin_size_t reset = 22;
 static pin_size_t cs = 17;
 static pin_size_t sck = 18;
 static pin_size_t sdo = 19;
