@@ -1,3 +1,7 @@
+/*
+ * Erase Write Read (EWR) cycle for S25 Infineon family of NOR Flash.
+*/
+
 #include <SPI.h>
 #include <bitset>
 
@@ -113,11 +117,11 @@
 
 // Global pin names/variables
 static pin_size_t write_protect = 21;
-static pin_size_t reset = 22;
-static pin_size_t cs = 17;
 static pin_size_t sck = 18;
-static pin_size_t sdo = 19;
-static pin_size_t sdi = 16;
+static pin_size_t mosi = 19;
+static pin_size_t miso = 16;
+static pin_size_t cs = 17;
+static pin_size_t reset = 22;
 static int cycle_count = 0;
 static int xchange_error = 0;
 
@@ -206,8 +210,8 @@ void setup() {
   SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
   SPI.setCS(cs);  
   SPI.setSCK(sck);
-  SPI.setRX(sdi);
-  SPI.setTX(sdo);
+  SPI.setRX(miso);
+  SPI.setTX(mosi);
   pinMode(cs, OUTPUT);
   //Disable write protect
   pinMode(write_protect, OUTPUT);
