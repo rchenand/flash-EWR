@@ -385,9 +385,10 @@ class NORFlash {
         SPI.transfer(RDSR1);
         uint8_t status1 = SPI.transfer(0x00); //Dummy Cycles to get info from SR1NV
         digitalWrite(cs1, HIGH);
+        // WIP, WEL and Erase and Program errors all in Status Register 1
         this->wip = (status1 >> WIP) & 0x1;
         this->wel = (status1 >> WEL) & 0x1;
-        this->e_err = (status1 >> E_ERR_S25HST) & 0x1; // error and program error also in status register 1
+        this->e_err = (status1 >> E_ERR_S25HST) & 0x1; 
         this->p_err = (status1 >> P_ERR_S25HST) & 0x1;
       }
       else if (this->mfg_id == 0x01 && this->device_type == 0x60){
@@ -423,10 +424,10 @@ class NORFlash {
       else if (this->mfg_id == 0x34){
         //This is a Infineon Cypress part
         digitalWrite(cs1, LOW);
-        SPI.transfer(RDSR);
+        SPI.transfer(RDSR1);
         uint8_t status1 = SPI.transfer(0x00);
         digitalWrite(cs1, HIGH);
-        // RDYBSY (same as write in progress), WIP, E_ERR and P_ERR all in Status 1 
+        // RDYBSY (WIP), E_ERR and P_ERR all in Status Register 1 
         this->wip = (status1 >> WIP) & 0x1; //RDYBSY (device ready/busy status flag)
         this->wel = (status1 >> WEL) & 0x1;
         this->e_err = (status1 >> E_ERR_S25HST) & 0x1;
@@ -445,7 +446,8 @@ class NORFlash {
       digitalWrite(cs1, HIGH);
     }
 
-    NORFlash(pin_size_t sck, pin_size_t sdi, pin_size_t sdo, pin_size_t reset, pin_size_t cs1, pin_size_t cs2, pin_size_t cs3){// pin_size_t wp){
+    NORFlash(pin_size_t sck, pin_size_t sdi, pin_size_t sdo, pin_size_t reset, pin_size_t cs1, pin_size_t cs2, pin_size_t cs3){
+      //write protect is already disabled with the HW
       this->reset = reset;     
       this->cs1 = cs1; 
       this->cs2 = cs2;
@@ -463,9 +465,6 @@ class NORFlash {
       SPI.setRX(sdi);
       SPI.setTX(sdo);
       pinMode(cs1, OUTPUT);
-      //Disable write protect
-      //pinMode(wp, OUTPUT);
-      //digitalWrite(wp, HIGH);
       pinMode(cs2, OUTPUT);
       digitalWrite(cs2, HIGH);
       pinMode(cs3, OUTPUT);
