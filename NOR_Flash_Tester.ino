@@ -12,7 +12,7 @@
  *          Additional chips can be added as needed, assuming certain addresses and structures are the same.
  */
  
-#include "NORFlash.h" 
+#include "NORFlash.h"  
 
 // Global pin names/variables
 static pin_size_t reset = 22; //RESET GP22
