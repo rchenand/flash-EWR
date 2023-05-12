@@ -35,6 +35,8 @@ static NORFlash* mem1;
 static NORFlash* mem2;
 static NORFlash* mem3;
 
+String addy; 
+
 
 //Global functions
 void clear_screen(){
@@ -80,7 +82,8 @@ void print_screen(){
   Serial.println("");
   Serial.println("----------------------------------- Commands ----------------------------------");
   Serial.println("");
-  Serial.println("(1)-Erase | (2)-Read | (3)-Verbose Read | (4)-Write | (5)-SWReset | (6)-HWReset");
+  Serial.println("           (1)-Chip Erase | (2)-Read | (3)-Verbose Read | (4)-Write");
+  Serial.println("                   (5)-SWReset | (6)-HWReset | (7)-Block Erase");
   Serial.println("");
   Serial.println("------------------------------------ Status -----------------------------------");
   Serial.println("");
@@ -186,7 +189,7 @@ void print_screen(){
   }
   Serial.println("");
   if (mem->mode == "Read" && verbose){
-    Serial.println("Block Data (expect all 0xAA):");
+    Serial.println("Block Data (expect all 0xAB):");
     if(mem->error_bytes != 0){
       int sector_count = 0;
       for (int i = 0; i < mem->block_size; i++){
@@ -212,6 +215,7 @@ void print_screen(){
     }
     Serial.println("");
   }
+
   Serial.println("------------------------------ SpaceX (c) 2023 -----------------------------");
   Serial.print("\r");
 }
@@ -257,13 +261,16 @@ void loop() {
         mem->read();
         break;
       case '4':
-        mem->write();
+        mem->write(); 
         break;
       case '5':
         mem->software_reset();
         break;
       case '6':
         mem->hardware_reset();
+        break;
+      case '7':
+        mem->block_erase();
         break;
       default:
         __asm__("nop");
