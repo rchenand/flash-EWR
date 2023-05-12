@@ -81,8 +81,8 @@ class NORFlash {
     uint8_t device_type;
     uint8_t density_code;
     uint16_t page_size = 256;
-    uint32_t block_size = 65536;
-    uint16_t sector_size = 4096;
+    uint32_t block_size = 65536; // 64 kB
+    uint16_t sector_size = 4096; // 4 kB
     uint8_t current_sector = 0;
     uint8_t block_verbose[65536];
     int error_bytes;
@@ -100,6 +100,20 @@ class NORFlash {
       digitalWrite(this->cs1, HIGH);
       digitalWrite(this->cs1, LOW); 
       SPI.transfer(CE);
+      digitalWrite(this->cs1, HIGH);
+    }
+
+    void block_erase(){
+      this->mode = "Block Erase";
+      digitalWrite(this->cs1,LOW);
+      SPI.transfer(WREN); //WREN must be issued to set WEL
+      digitalWrite(this->cs1,HIGH);
+      digitalWrite(this->cs1, LOW);
+      SPI.transfer(BE); //Block erase, followed by address of block to erase
+      SPI.transfer(0x00);
+      SPI.transfer(0x00);
+      SPI.transfer(0x00);
+      SPI.transfer(0x00); //Start at address zero
       digitalWrite(this->cs1, HIGH);
     }
 
@@ -133,7 +147,7 @@ class NORFlash {
           this->current_sector++;
         }
         uint8_t data = SPI.transfer(0x00);
-        if (data != 0xAA){
+        if (data != 0xAA){ 
           this->error_bytes++;
         }
         this->bytes_covered++;
@@ -173,8 +187,8 @@ class NORFlash {
       //Bytes must be written in batches of 265 bytes (one page)
       for (uint32_t i = 0; i < this->block_size; i+=128){
         //Check if we are in a new sector
-        if(i % this->sector_size == 0){
-          this->current_sector++;
+        if(i % this->sector_size == 0){ //tracking sector on, can use for debugging
+          this->current_sector++; // 16 sectors total in a block
         }
         digitalWrite(this->cs1, LOW);  
         SPI.transfer(WREN); //Write Enable (must be enabled before every command)
@@ -188,7 +202,7 @@ class NORFlash {
         SPI.transfer((i >> 8) & 0xFF);
         SPI.transfer(i & 0xFF);
         for (int j = 0; j < 256; j++){
-          SPI.transfer(remember_me);
+          SPI.transfer(remember_me); // 0xAA
           this->bytes_covered++;
         }
         digitalWrite(this->cs1, HIGH);        
