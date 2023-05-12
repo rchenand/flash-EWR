@@ -81,7 +81,7 @@ class NORFlash {
     uint8_t device_type;
     uint8_t density_code;
     uint16_t page_size = 256;
-    uint32_t block_size = 65536; // 64 kB
+    uint32_t block_size = 65536; // 64 kB (default, only one that currently isn't 64KB is S25HST)
     uint16_t sector_size = 4096; // 4 kB
     uint8_t current_sector = 0;
     uint8_t block_verbose[65536];
@@ -187,8 +187,8 @@ class NORFlash {
       //Bytes must be written in batches of 265 bytes (one page)
       for (uint32_t i = 0; i < this->block_size; i+=128){
         //Check if we are in a new sector
-        if(i % this->sector_size == 0){ //tracking sector on, can use for debugging
-          this->current_sector++; // 16 sectors total in a block
+        if(i % this->sector_size == 0){ //tracking what sector currently on, can use for debugging
+          this->current_sector++; // 16 sectors total in a block for 64 KB sector
         }
         digitalWrite(this->cs1, LOW);  
         SPI.transfer(WREN); //Write Enable (must be enabled before every command)
@@ -348,6 +348,7 @@ class NORFlash {
         //This is a Infineon Cypress 1GB S25HSxxxT part
         this->mfg = "Cypress";
         //What is the device type?
+        this->block_size = 262144; //256 kB sector, 32 4kb sectors 
         switch(this->device_type) {
           case 0x2B:
             this->part_number = "S25HS01GT";
