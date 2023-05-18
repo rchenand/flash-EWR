@@ -16,9 +16,9 @@
 
 // Global pin names/variables
 static pin_size_t reset = 22; //RESET GP22
-static pin_size_t cs1 = 17; //CS1 GP17
+static pin_size_t cs1 = 21; //CS1 GP17
 static pin_size_t cs2 = 5; //CS2 GP5
-static pin_size_t cs3 = 21; //CS3 GP21
+static pin_size_t cs3 = 17; //CS3 GP21
 static pin_size_t sck = 18;
 static pin_size_t sdo = 19; //MOSI
 static pin_size_t sdi = 16; //MISO
@@ -34,6 +34,10 @@ static NORFlash* mem;
 static NORFlash* mem1;
 static NORFlash* mem2;
 static NORFlash* mem3;
+
+//mem1 = new NORFlash(sck, sdi, sdo, reset, cs1, cs2, cs3); 
+//mem2 = new NORFlash(sck, sdi, sdo, reset, cs2, cs1, cs3);
+//mem3 = new NORFlash(sck, sdi, sdo, reset, cs3, cs1, cs2); 
 
 String addy; 
 
@@ -228,10 +232,8 @@ void setup() {
   delay(2000);  //Give everything a moment
 
   //Init NOR Flash for specific DUT
-  mem1 = new NORFlash(sck, sdi, sdo, reset, cs1, cs2, cs3); //DUT1
-  mem2 = new NORFlash(sck, sdi, sdo, reset, cs2, cs1, cs3); //DUT2
-  mem3 = new NORFlash(sck, sdi, sdo, reset, cs3, cs1, cs2); //DUT3
-  mem = mem2;
+  mem = new NORFlash(sck, sdi, sdo, reset, cs1, cs2, cs3);
+
 
   delay(1000);  //Give everything a moment 
 
