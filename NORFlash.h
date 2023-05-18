@@ -270,6 +270,9 @@ class NORFlash {
           case 0x60:
             this->part_number = "S25FL";
             break;
+          case 0x02:
+            this->part_number = "S25FL";
+            break;
           default:
             this->part_number = "Unknown";
         }
@@ -348,7 +351,7 @@ class NORFlash {
         //This is a Infineon Cypress 1GB S25HSxxxT part
         this->mfg = "Cypress";
         //What is the device type?
-        this->block_size = 262144; //256 kB sector, 32 4kb sectors 
+        this->block_size = 262144; //256 kB block, 32 4kb sectors 
         switch(this->device_type) {
           case 0x2B:
             this->part_number = "S25HS01GT";
@@ -395,7 +398,7 @@ class NORFlash {
         this->e_err = (status2 >> E_ERR) & 0x1;
       }
       else if (this->mfg_id == 0x01 && this->device_type == 0x02){
-        //This is an Infineon part S25FLxxxS
+        //This is an Infineon part S25FL256S
         digitalWrite(cs1, LOW);
         SPI.transfer(RDSR1);
         uint8_t status1 = SPI.transfer(0x00); //Dummy Cycles to get info from SR1NV
@@ -403,11 +406,12 @@ class NORFlash {
         // WIP, WEL and Erase and Program errors all in Status Register 1
         this->wip = (status1 >> WIP) & 0x1;
         this->wel = (status1 >> WEL) & 0x1;
-        this->e_err = (status1 >> E_ERR_S25HST) & 0x1; 
-        this->p_err = (status1 >> P_ERR_S25HST) & 0x1;
+        this->e_err = (status1 >> 5) & 0x1; 
+        this->p_err = (status1 >> 6) & 0x1;
       }
+      
       else if (this->mfg_id == 0x01 && this->device_type == 0x60){
-        //This is an Infineon part S25FLxxxL
+        //This is an Infineon part S25FL256L
         digitalWrite(cs1, LOW);
         SPI.transfer(RDSR1);
         uint8_t status1 = SPI.transfer(0x00); //Dummy Cycles to get info from SR1NV
@@ -474,7 +478,7 @@ class NORFlash {
       //Change the SPI Settings to allow Clock Frequency of 10MHz (absolute max per datasheet is 133MHz)
       //Most Significant Bit First
       //Data Mode 0 (Clock Polarity = 0 and Clock Phase Angle = 0)
-      SPI.beginTransaction(SPISettings(50000000, MSBFIRST, SPI_MODE0)); // see if can actually or need to decrease freq 
+      SPI.beginTransaction(SPISettings(5000000, MSBFIRST, SPI_MODE0)); // see if can actually or need to decrease freq 
       SPI.setCS(cs1);  
       SPI.setSCK(sck);
       SPI.setRX(sdi);
